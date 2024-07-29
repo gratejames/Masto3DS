@@ -188,6 +188,8 @@ clean:
 	@rm -f $(TARGET).smdh
 	@echo $(TARGET).elf
 	@rm -f $(TARGET).elf
+	@echo $(TARGET).lst
+	@rm -f $(TARGET).lst
 
 	@if [ $(BUILD) != $(GFXBUILD) ]; then\
         echo $(GFXBUILD);\
