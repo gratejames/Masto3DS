@@ -532,7 +532,8 @@ int main() {
 			// }
 		}
 		if (kDown & KEY_Y) {
-			std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
+			std::string url = "https://gratejames.net/apiexample1";
+			// std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
 			std::cout << "Fetching " << url << std::endl;
 			std::string fileContents = "";
 			// CURLcode res = download(url, fileContents);

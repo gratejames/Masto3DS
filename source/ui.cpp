@@ -1,5 +1,19 @@
 #include "ui.hpp"
 
+string getUTF8Char(string text, uint &index) {
+    u8 byte1 = text[index];
+    if (byte1 < 0b11000000) {
+        return text.substr(index, 1);
+    }
+    if (byte1 < 0b11100000) {
+        return text.substr(index, 2);
+    }
+    if (byte1 < 0b11110000) {
+        return text.substr(index, 3);
+    }
+    return text.substr(index, 4);
+}
+
 text::text(string dispText, u32 color, float scale) {
     this->dispText = dispText;
     this->color = color;
@@ -7,15 +21,23 @@ text::text(string dispText, u32 color, float scale) {
 }
 
 void text::Draw(float origin_x, float origin_y, float &width, float &height) {
+    float t_width = 0, t_height = 0;
+    width = 0, height = 0;
+
     C2D_TextBuf textBuf = C2D_TextBufNew(400);
     C2D_Text c2text;
-
-
-
-	C2D_TextParse(&c2text, textBuf, dispText.c_str());
-	C2D_TextOptimize(&c2text);
-    C2D_TextGetDimensions(&c2text, 0.5, 0.5, &width, &height);
-	C2D_DrawText(&c2text, C2D_WithColor, origin_x, origin_y, 0, scale, scale, color);
+    uint i = 0;
+    while (i < dispText.length()) {
+        string utf8Char = getUTF8Char(dispText, i);
+        i += utf8Char.length();
+        C2D_TextParse(&c2text, textBuf, utf8Char.c_str());
+        C2D_TextOptimize(&c2text);
+        C2D_TextGetDimensions(&c2text, scale, scale, &t_width, &t_height);
+        C2D_DrawText(&c2text, C2D_WithColor, origin_x + width, origin_y, 0, scale, scale, color);
+        width += t_width;
+        height = std::max(t_height, height);
+    }
+    C2D_TextBufDelete(textBuf);
 
 
     if (uiDebug_textOutlines) {
@@ -24,7 +46,6 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height) {
         C2D_DrawLine(origin_x + width, origin_y + height, color_debug, origin_x + width, origin_y, color_debug, 1, 0);
         C2D_DrawLine(origin_x + width, origin_y + height, color_debug, origin_x, origin_y + height, color_debug, 1, 0);
     }
-    C2D_TextBufDelete(textBuf); 
 }
 
 // htmltext::htmltext(string dispText, u32 color, float scale) {
