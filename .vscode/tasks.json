@@ -21,7 +21,8 @@
           }
         },
         {
-            "label": "clean",
+            // "label": "clean",
+            "label": "altTask",
             "type": "shell",
             "command": "make",
             "args": [
@@ -40,7 +41,8 @@
             }
         },
         {
-            "label":"link",
+            // "label":"link",
+            "label":"shiftTask",
             "type":"shell",
             "command": "/opt/devkitpro/tools/bin/3dslink",
             "args": [

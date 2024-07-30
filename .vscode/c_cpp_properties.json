@@ -4,10 +4,10 @@
             "name": "3DS",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/devkitpro/libctru/include/**",
-                "/opt/devkitpro/devkitARM/include/**",
-                "/opt/devkitpro/devkitARM/arm-none-eabi/include/**",
-                "/opt/devkitpro/portlibs/3ds/include/**"
+                "/opt/devkitpro/libctru/include",
+                "/opt/devkitpro/devkitARM/include",
+                "/opt/devkitpro/devkitARM/arm-none-eabi/include",
+                "/opt/devkitpro/portlibs/3ds/include"
             ],
             "defines": [
                 "ARM9",
@@ -38,7 +38,7 @@
             ],
             "cStandard": "gnu17",
             "cppStandard": "gnu++11",
-            "intelliSenseMode": "gcc-x64",
+            "intelliSenseMode": "gcc-arm",
             "browse": {
                 "path": [
                     "${workspaceFolder}/source"
