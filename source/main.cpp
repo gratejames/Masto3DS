@@ -345,12 +345,12 @@ void drawUI() {
 	C2D_SceneBegin(top);
 	float origin_x = 0;
 	float origin_y = 0;
+	const float maxWidth = SCREEN_WIDTH - (2*uiPad);
     for (uiStatus s : uiStatuses) {
-		float width = SCREEN_WIDTH;
-		float height = 0;
-        s.Draw(origin_x, origin_y, width, height);
+		float width = 0, height = 0;
+        s.Draw(origin_x, origin_y, width, height, maxWidth);
 		origin_y += height;
-		C2D_DrawLine(uiPad, origin_y, color_horizontalRule, SCREEN_WIDTH - uiPad, origin_y, color_horizontalRule, 2, 0); 		
+		C2D_DrawLine(uiPad, origin_y + 0.5, color_horizontalRule, SCREEN_WIDTH - uiPad, origin_y + 0.5, color_horizontalRule, 2, 0); 		
     }
 
 // C2D_TextBufClear(titleBuf);
@@ -532,7 +532,7 @@ int main() {
 			// }
 		}
 		if (kDown & KEY_Y) {
-			std::string url = "https://gratejames.net/apiexample1";
+			std::string url = "https://gratejames.net/apiexample3";
 			// std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
 			std::cout << "Fetching " << url << std::endl;
 			std::string fileContents = "";
@@ -573,19 +573,26 @@ int main() {
 			retCode = jsonParse(currentBuf, currentDoc);
 			if (retCode != 0) {
 				std::cout << "Received corrupted JSON: " << retCode << std::endl;
+				holdForExit();
 				return -1;
 			}
 			Timeline currentTimeline = Timeline();
-			currentTimeline.Ingest(currentDoc);
+			retCode = currentTimeline.Ingest(currentDoc);
+			if (retCode != 0) {
+				std::cout << "Bad ingest: " << retCode << std::endl;
+				holdForExit();
+				return -1;
+			}
 			free(currentBuf);
-			std::cout << "Post [0]:" << std::endl;
-			std::cout << currentTimeline.statuses[0].account.display_name << std::endl;
-			std::cout << currentTimeline.statuses[0].account.acct << std::endl;
-			std::cout << currentTimeline.statuses[0].content << std::endl;
+			// std::cout << "Post [0]:" << std::endl;
+			// std::cout << currentTimeline.statuses[0].account.display_name << std::endl;
+			// std::cout << currentTimeline.statuses[0].account.acct << std::endl;
+			// std::cout << currentTimeline.statuses[0].content << std::endl;
 			for (Status st : currentTimeline.statuses) {
-				uiStatus newStatus = {st.account.display_name, st.account.acct, st.content};
+				uiStatus newStatus = {st};
 				uiStatuses.push_back(newStatus);
 			}
+			drawUI();
 			std::cout << "UI Stack updated" << std::endl;
 		}
 		// if (kDown & KEY_L) {
@@ -649,7 +656,7 @@ int main() {
 			// }
 		// }
 
-		drawUI();
+		// drawUI();
 	}
 
 	// Exit services

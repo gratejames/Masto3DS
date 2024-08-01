@@ -1,12 +1,31 @@
+#pragma once
+
 #include <vector>
-// #include <ctime>
 #include <iostream>
 #include <iomanip>
-// #include <string.h>
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
 using std::vector;
 using std::string;
+
+#define ANSIreset "\x1b[0m"
+#define ANSIerror "\x1b[31m"
+
+struct Ingest{
+    enum CheckParams{
+        None           = 0,
+        Optional       = (1<<0),
+        Nullable       = (1<<1),
+    };
+    enum CheckTypes {
+        Null,
+        Bool,
+        Object,
+        Array,
+        String,
+        Number,
+    };
+};
 
 enum StatusVisibility {
     SV_Public,          // Visible to everyone, shown in public timelines.
