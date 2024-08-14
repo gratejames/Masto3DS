@@ -444,7 +444,7 @@ int main() {
 			// }
 		}
 		if (kDown & KEY_Y) {
-			std::string url = "https://gratejames.net/apiexample5";
+			std::string url = "https://gratejames.net/apiexample9";
 			// std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
 			std::cout << "Fetching " << url << std::endl;
 			std::string fileContents = "";

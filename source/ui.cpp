@@ -32,11 +32,11 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
     C2D_TextBuf textBuf = C2D_TextBufNew(40);
     C2D_Text c2text;
     uint i = 0;
-    bool imageDebug = false;
     while (i < dispText.length()) {
         string utf8Char = getUTF8Char(dispText, i);
         i += utf8Char.length();
         if (utf8Char == ":") {
+            // TODO: Ensure that there's actually a closing colon
             // std::cout << "Begin Emoji!" << std::endl;
             // Begin emoji!!
             string emojiLookAhead = "";
@@ -85,18 +85,15 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
                 // the shortcode that we can pull from the original emojis list
                 // std::cout << "Found: " << emojiNames[0].second << "=" << emojis[emojiNames[0].first].shortcode << std::endl;
                 if (dispText.length() < i + emojiNames[0].second.length()) {
-                    std::cout << "Out of room" << std::endl;
+                    // std::cout << "Out of room" << std::endl;
                     continue;
                 }
                 string possibleEmoji = dispText.substr(i, emojiNames[0].second.length());
                 if (possibleEmoji != emojiNames[0].second) {
-                    std::cout << "Mismatch" << std::endl;
+                    // std::cout << "Mismatch" << std::endl;
                     continue;
                 }
                 // std::cout << "Found: " << emojiNames[0].second << std::endl;
-                // TODO: Download image from emojis[emojiNames[0].first].static_url
-                // into memory and display it at the correct position, and advance
-                // the linewidth by the width of the emoji
                 string url = emojis[emojiNames[0].first].static_url;
 
                 // std::cout << "Fetching " << url << std::endl;
@@ -106,41 +103,16 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
                     std::cout << "Download failed" << std::endl;
                     continue;
                 }
-                PNGimage png {};
-                int imgRes = parsePNG(chunk, png, imageDebug);
-                free(chunk.response);
-                if (imgRes != 0) {
-                    std::cout << "PNG: " << imgRes << std::endl;
-                    continue;
-                }
 
-                C2D_Image *image = new C2D_Image;
-                
-                imgRes = PNGtoImage(png, image);
+                C2D_Image image = EmojiFromDownload(chunk);
 
+                C2D_DrawImageAt(image, origin_x + width, origin_y, 0, NULL, 0.2*scale, 0.2*scale);
 
-                if (imgRes != 0) {
-                    std::cout << "Image: " << imgRes << std::endl;
-                    linearFree(image->tex);
-                    free((void *)image->subtex);
-                    delete image;
-                    continue;
-                }
-                float scale = 4.0f;
-                // std::cout << "Emoji (" << chunk.size << ") downloaded to memory and freed" << std::endl;
-                if (imageDebug) {
-                    C2D_DrawImageAt(*image, 148, 10, 0, NULL, scale, scale);
-                } else {
-                    C2D_DrawImageAt(*image, 10, 10, 0, NULL, scale, scale);
-                }
-                // C2D_DrawImageAt(*image, origin_x + width, origin_y, 0, NULL, scale, scale);
+                linearFree(image.tex);
+                free((void *)image.subtex);
 
-                linearFree(image->tex);
-                free((void *)image->subtex);
-                delete image;
                 i += emojiNames[0].second.length() + 1;
-                imageDebug = true;
-                // C2D_DrawImageAt(*image, origin_x + width, origin_y, 0, NULL, 1.0f, 1.0f);
+                width += 10;
             } else {
                 std::cout << "Emojis found n>1? n=" << emojiNames.size() << std::endl;
             }
