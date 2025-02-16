@@ -1,0 +1,1 @@
+2580.png 2581.png 2582.png 2583.png 2584.png 2585.png 2586.png 2587.png 2588.png 2589.png 258A.png 258B.png 258C.png 258D.png 258E.png 258F.png 2590.png 2591.png 2592.png 2593.png 2594.png 2595.png 2596.png 2597.png 2598.png 2599.png 259A.png 259B.png 259C.png 259D.png 259E.png 259F.png -o ../_build/block_elements_font.t3x -p ../_preview/block_elements_preview.png
