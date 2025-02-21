@@ -29,8 +29,6 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
     float t_width = 0, t_height = 0;
     width = 0, height = 0;
 
-    C2D_TextBuf textBuf = C2D_TextBufNew(40);
-    C2D_Text c2text;
     uint i = 0;
     while (i < dispText.length()) {
         string utf8Char = getUTF8Char(dispText, i);
@@ -96,7 +94,7 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
                 // std::cout << "Found: " << emojiNames[0].second << std::endl;
                 string url = emojis[emojiNames[0].first].static_url;
 
-                // std::cout << "Fetching " << url << std::endl;
+                // std::cout << "Fetching emoji " << url << std::endl;
                 struct downloaded chunk = {0};
                 int retCode = download(url, chunk);
                 if (retCode != 0) {
@@ -104,28 +102,36 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
                     continue;
                 }
 
-                C2D_Image image = EmojiFromDownload(chunk);
+                // std::cout << "emoji size " << chunk.size << std::endl;
 
-                C2D_DrawImageAt(image, origin_x + width, origin_y, 0, NULL, 0.2*scale, 0.2*scale);
+                uint imgWidth;
+                C2D_Image image = EmojiFromDownload(chunk, imgWidth);
+                float imageScale = 12.0/imgWidth;
+
+                // std::cout << "image: ptr " << &image << " s:" << image.tex->width << "," << image.tex->height << std::endl;
+                // std::cout << "image: pos " << origin_x + width << "," << origin_y << " ds:" << imageScale << std::endl;
+
+                C2D_DrawImageAt(image, origin_x + width, origin_y+4, 0, NULL, imageScale*scale, imageScale*scale);
 
                 linearFree(image.tex);
                 free((void *)image.subtex);
 
                 i += emojiNames[0].second.length() + 1;
-                width += 10;
+                // width += 10;
+                width += 12*scale;
+                // std::cout << "Emoji: width: " << width << std::endl;
             } else {
                 std::cout << "Emojis found n>1? n=" << emojiNames.size() << std::endl;
             }
             continue;
         }
-        C2D_TextParse(&c2text, textBuf, utf8Char.c_str());
-        C2D_TextOptimize(&c2text);
-        C2D_TextGetDimensions(&c2text, scale, scale, &t_width, &t_height);
-        C2D_DrawText(&c2text, C2D_WithColor, origin_x + width, origin_y, 0, scale, scale, color);
+
+
+        getSize_efont(utf8Char, scale, t_width, t_height);
+        draw_efont(utf8Char, origin_x + width, origin_y, scale, color);
         width += t_width;
         height = std::max(t_height, height);
     }
-    C2D_TextBufDelete(textBuf);
 
     if (uiDebug_textOutlines) {
         int x1 = origin_x;
@@ -151,12 +157,6 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
     float currentLineWidth = 0;;
     width = 0, height = 0;
 
-    C2D_TextBuf textBuf = C2D_TextBufNew(600);
-    if (textBuf == NULL) {
-        std::cout << "Text buf null..." << std::endl;
-        return;
-    }
-    C2D_Text c2text;
     uint i = 0;
     stack<string> HTMLcontext;
     vector<string> HTMLproperties;
@@ -241,7 +241,7 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
                         // If we're already reading, this is a closing quote
                         // std::cout << "(" << HTMLpropertyKeyPartial << ":" << HTMLpropertyValuePartial << ")";
                         if (HTMLpropertyKeyPartial == "class" && (HTMLpropertyValuePartial.find("invisible") != std::string::npos)) {
-                            // std::cout << "(Invis)";
+                            // std::cout << "(Invis)" << std::endl;;
                             style_invis = true;
                         }
                         HTMLpropertyKeyPartial = "";
@@ -297,9 +297,7 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
         if (style_invis)
             continue;
 
-        C2D_TextParse(&c2text, textBuf, utf8Char.c_str());
-        C2D_TextOptimize(&c2text);
-        C2D_TextGetDimensions(&c2text, scale, scale, &t_width, &t_height);
+        getSize_efont(utf8Char, scale, t_width, t_height);
         // TODO: Some sort of word wrapping? Pehaps scan ahead to the next space when we hit a space, then check if the word can fit in?
         if (currentLineWidth + t_width > maxWidth) {
             height += lineHeight;
@@ -307,18 +305,18 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
         }
         float text_x = origin_x + currentLineWidth;
         float text_y = origin_y + height;
+
         if (style_link) {
-            C2D_DrawText(&c2text, C2D_WithColor, text_x, text_y, 0, scale, scale, color_textLink);
+            draw_efont(utf8Char, text_x, text_y, scale, color_textLink);
             // Round the underlining to the nearest 2 for some reason? Otherwise it can dissapear
             int underline_y = text_y + lineHeight - 2;
             C2D_DrawLine(text_x, underline_y, color_textLink, text_x + t_width, underline_y, color_textLink, 1, 0);
         } else {
-            C2D_DrawText(&c2text, C2D_WithColor, text_x, text_y, 0, scale, scale, color_text);
-        }        
+            draw_efont(utf8Char, text_x, text_y, scale, color_text);
+        }
         currentLineWidth += t_width;
         width = std::max(width, currentLineWidth);
     }
-    C2D_TextBufDelete(textBuf);
     // std::cout << "BadHTML Done!" << std::endl;
 
 
@@ -335,9 +333,9 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
 }
 
 uiStatus::uiStatus(Status &status) : internalStatus(status) {
-    display_name = text(internalStatus.account.display_name, color_text, 0.5, internalStatus.account.emojis);
-    acct = text(internalStatus.account.acct, color_text, 0.4, internalStatus.account.emojis);
-    content = htmltext(internalStatus.content, 0.4, status.emojis);
+    display_name = text(internalStatus.account.display_name, color_text, 1, internalStatus.account.emojis);
+    acct = text(internalStatus.account.acct, color_text, 0.8, internalStatus.account.emojis);
+    content = htmltext(internalStatus.content, 0.8, status.emojis);
 }
 
 void uiStatus::Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth) {

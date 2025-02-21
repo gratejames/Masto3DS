@@ -38,8 +38,11 @@ DATA		:=	data
 INCLUDES	:=	include
 GRAPHICS	:=	gfx
 GFXBUILD	:=	$(BUILD)
-#ROMFS		:=	romfs
+ROMFS		:=	romfs
 #GFXBUILD	:=	$(ROMFS)/gfx
+
+APP_TITLE			:= "Masto3DS"
+APP_AUTHOR			:= "GrateJames"
 
 #---------------------------------------------------------------------------------
 # options for code generation

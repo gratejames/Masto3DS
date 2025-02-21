@@ -9,4 +9,4 @@ using std::vector;
 #include "downloadedstruct.hpp"
 #include "lodepng.hpp"
 
-C2D_Image EmojiFromDownload(downloaded PNGdata);
+C2D_Image EmojiFromDownload(downloaded PNGdata, uint &width);

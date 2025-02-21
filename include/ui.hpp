@@ -12,12 +12,13 @@ using std::pair;
 #include "schemas.hpp"
 #include "download.hpp"
 #include "images.hpp"
+#include "external_fonts.hpp"
 
 #include <curl/curl.h>
 
-#define uiDebug_textOutlines false
+#define uiDebug_textOutlines 0
 #define uiPad 5
-#define defaultFontHeight 30
+#define defaultFontHeight 20
 
 const u32 color_background          = C2D_Color32(0x28, 0x2C, 0x37, 0xFF);
 const u32 color_text                = C2D_Color32(0xFF, 0xFF, 0xFF, 0xFF);

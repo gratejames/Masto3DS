@@ -2,13 +2,13 @@
 
 
 // https://github.com/Universal-Team/Universal-Updater/blob/015120a88218f430ac65466f93e352f5d66908bf/source/utils/screenshot.cpp#L31-L91
-C2D_Image EmojiFromDownload(downloaded PNGdata) {
+C2D_Image EmojiFromDownload(downloaded PNGdata, uint &width) {
     std::vector<u8> buffer = {};
     for (uint i = 0; i < PNGdata.size; i++) {
         buffer.push_back(PNGdata.response[i]);
     }
 	std::vector<u8> ImageBuffer;
-	unsigned width, height;
+	uint height;
 	C2D_Image img;
 	lodepng::decode(ImageBuffer, width, height, buffer);
 

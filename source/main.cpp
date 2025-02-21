@@ -421,6 +421,8 @@ int main() {
 	setupDirectory();
 	setupCurl();
 	setupSettings();
+	romfsInit();
+	load_efonts();
 	
 	// Main loop
 	while (aptMainLoop())
@@ -444,8 +446,8 @@ int main() {
 			// }
 		}
 		if (kDown & KEY_Y) {
-			std::string url = "https://gratejames.net/apiexample9";
-			// std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
+			// std::string url = "https://gratejames.net/old/apiexample2";
+			std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
 			std::cout << "Fetching " << url << std::endl;
 			std::string fileContents = "";
 			// CURLcode res = download(url, fileContents);
@@ -504,6 +506,7 @@ int main() {
 				uiStatus newStatus = {st};
 				uiStatuses.push_back(newStatus);
 			}
+
 			drawUI();
 			std::cout << "UI Stack updated" << std::endl;
 		}

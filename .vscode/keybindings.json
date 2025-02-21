@@ -1,6 +1,15 @@
 // This doesn't actually do anything - copy it into your actual keybindings.json for it to have an effect
 [
     {
+        "key": "ctrl+k ctrl+b",
+        "command": "-editor.action.setSelectionAnchor",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+k ctrl+b",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
         "key": "ctrl+b",
         "command": "-workbench.action.toggleSidebarVisibility"
     },
