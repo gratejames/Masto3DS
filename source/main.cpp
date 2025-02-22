@@ -39,7 +39,9 @@ using namespace rapidjson;
 
 C3D_RenderTarget* top;
 
-vector<uiStatus> uiStatuses;
+Document settingsDoc;
+char* settingsBuf;
+uiStatus * currentUIstatus;
 
 std::string defaultJSON = "{}";
 
@@ -199,65 +201,13 @@ int stringToBuffer(std::string string, char* &buffer) {
 	const char* cstr = string.c_str();
 	int contentSize = strlen(cstr);
 	buffer = (char*)malloc(contentSize+1);
-	if (buffer == NULL) {
+	if (buffer == nullptr) {
 		return -1;
 	}
 	memcpy(buffer, cstr, contentSize);
 	memset(buffer+contentSize, 0, 1);
 	return 0;
 }
-
-// void stringListToMenu(std::vector<std::string> stringList, int amount) {
-// 	std::cout << stringList.size() << " items in sl" << std::endl;
-// 	std::string output = "";
-// 	menuLength = std::fmin(stringList.size(), amount);
-// 	for (int i = 0; i < menuLength; i++) {
-// 		output.append(stringList[i].substr(0, 65));
-// 		output.append("\n");
-// 	}
-// 	free(menuString);
-// 	stringToBuffer(output, menuString);
-// }
-
-// int fetchPodcasts() {
-// 	// Populates EpisodeNames and EpisodeURLs
-// 	EpisodeNames = {};
-// 	EpisodeURLs = {};
-// 	std::cout << "Fetching episodes for " << Names[selectedPodcast] << std::endl;
-// 	std::string downloadedFile;
-// 	std::string targetURL = URLs[selectedPodcast];
-// 	retCode = download(targetURL, downloadedFile);
-// 	if (retCode != 0) {
-// 		std::cout << "HTTP download failed: " << retCode << std::endl;
-// 		return -1;
-// 	}
-
-// 	std::string fileDownload = "";
-
-// 	char* DocBuffer;
-// 	stringToBuffer(downloadedFile, DocBuffer);
-
-// 	tinyxml2::XMLDocument RSSFeed;
-// 	tinyxml2::XMLError xmlRetCode = RSSFeed.Parse(DocBuffer);
-// 	if (xmlRetCode != tinyxml2::XML_SUCCESS) {
-// 		std::cout << "Err, xml: " << RSSFeed.ErrorIDToName(xmlRetCode) << std::endl;
-// 		std::cout << "Line: " << RSSFeed.ErrorLineNum() << std::endl;
-// 		// holdForExit();
-// 		return 0;
-// 	}
-
-// 	tinyxml2::XMLElement* Feed = RSSFeed.FirstChildElement("rss");
-// 	tinyxml2::XMLElement* Chan = Feed->FirstChildElement("channel");
-// 	// tinyxml2::XMLElement* Name = Chan->FirstChildElement("title");
-// 	int i = 0;
-// 	for (tinyxml2::XMLElement* node = Chan->FirstChildElement("item"); node != NULL; node = node->NextSiblingElement("item")) {
-// 		EpisodeNames.push_back(node->FirstChildElement("title")->GetText());
-// 		EpisodeURLs.push_back(node->FirstChildElement("enclosure")->Attribute("url"));
-// 		i++;
-// 	}
-// 	std::cout << "Loaded " << i << " episodes" << std::endl;
-// 	return 0;
-// }
 
 void setupGraphics() {
 	gfxInitDefault();
@@ -268,14 +218,9 @@ void setupGraphics() {
 	
 	consoleInit(GFX_BOTTOM,NULL);
 	top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-
-	// currentMenu = InitialMenu;
-	// updateMenu();
 }
 
 void cleanupGraphics() {
-	// C2D_TextBufDelete(titleBuf);
-	// C2D_TextBufDelete(menuBuf);
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
@@ -288,87 +233,11 @@ void drawUI() {
 	float origin_x = 0;
 	float origin_y = 0;
 	const float maxWidth = SCREEN_WIDTH - (2*uiPad);
-    for (uiStatus s : uiStatuses) {
-		float width = 0, height = 0;
-        s.Draw(origin_x, origin_y, width, height, maxWidth);
-		origin_y += height;
-		C2D_DrawLine(uiPad, origin_y + 0.5, color_horizontalRule, SCREEN_WIDTH - uiPad, origin_y + 0.5, color_horizontalRule, 2, 0); 		
-    }
+	float width = 0, height = 0;
+	currentUIstatus->Draw(origin_x, origin_y, width, height, maxWidth);
 
-// C2D_TextBufClear(titleBuf);
-// 	C2D_TextBufClear(menuBuf);
-// 	// Draw the title
-// 	C2D_TextParse(&title, titleBuf, titleText.c_str());
-// 	C2D_TextOptimize(&title);
-// 	C2D_DrawText(&title, 0, 10, 10, 0, 0.7, 0.7);
-// 	// Draw the menu
-// 	C2D_TextParse(&menu, menuBuf, menuString);
-// 	C2D_TextOptimize(&menu);
-// 	C2D_DrawText(&menu, 0, 30, 40, 0, 0.4, 0.4);
-// 	// Draw the cursor
-// 	C2D_DrawTriangle(10, cursor*12+41, clrRed, 20, cursor*12+46, clrRed, 10, cursor*12+51, clrRed, 0);
 	C3D_FrameEnd(0);
 }
-
-// static size_t WriteMP3Callback(void *contents, size_t size, size_t nmemb, void *userp) {
-// 	size_t realsize = size * nmemb;
-// 	std::ofstream* myfile = (std::ofstream*)userp;
-	
-
-// 	myfile->write((const char *)contents, realsize);
-// 	std::cout << "3";
-
-// 	return realsize;
-// }
-
-// void downloadEpisode()  {
-// 	std::cout << "Downloading: " << EpisodeURLs[selectedEpisode] << std::endl;
-// 	std::string targetURL = EpisodeURLs[selectedEpisode];
-// 	std::string filePath = ProjectRoot;
-// 	filePath.append(EpisodeNames[selectedEpisode]);
-// 	filePath.append(".mp3");
-
-// 	std::ofstream myfile;
-// 	myfile.open(filePath.c_str(), std::fstream::out | std::fstream::binary);
-// 	if (!myfile.is_open()) {
-// 		std::cout << "Failed to open " << filePath << " to download" << std::endl;
-// 		return;
-// 	}
-
-// 	// std::string downloadedFile;
-	
-// 	CURL *curl;
-// 	CURLcode res;
-// 	const char* urlc = targetURL.c_str();
-
-
-// 	curl_global_init(CURL_GLOBAL_DEFAULT);
-
-// 	curl = curl_easy_init();
-// 	if(curl) {
-// 		curl_easy_setopt(curl, CURLOPT_URL, urlc);
-// 		curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
-// 		curl_easy_setopt(curl, CURLOPT_CAINFO, pCACertFilePath);
-// 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
-// 		curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L); // cache the CA cert bundle in memory for a week
-// 	    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMP3Callback);
-//  	    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&myfile);
-
-// 		/* Perform the request, res gets the return code */
-// 		res = curl_easy_perform(curl);
-
-// 		/* Check for errors */
-// 		if(res != CURLE_OK)
-// 			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-
-// 		/* always cleanup */
-// 		curl_easy_cleanup(curl);
-// 	}
-// 	myfile.close();
-// }
-
-Document settingsDoc;
-char* settingsBuf;
 
 void writeSettings() {
 	StringBuffer buffer;
@@ -391,21 +260,16 @@ int setupSettings() {
 	} else {
 		std::cout << "Read settings" << std::endl;
 	}
-	stringToBuffer(settingsContents, settingsBuf);
+	if (stringToBuffer(settingsContents, settingsBuf) != 0) {
+		std::cout << "Failed to make buffer on line " << __LINE__ << std::endl;
+		return -1;
+	}
+	
 	retCode = jsonParse(settingsBuf, settingsDoc);
 	if (retCode != 0) {
 		std::cout << "Corrupted settings JSON: " << retCode << std::endl;
 		return -1;
 	}
-	// if (!settingsDoc.HasMember("savedPodcasts")) {
-	// 	std::cout << "Corrupted settings JSON: missing key \"savedPodcasts\"" << std::endl;
-	// 	return -1;
-	// }
-	// for (SizeType i = 0; i < settingsDoc["savedPodcasts"].Size(); i++) {
-	// 	URLs.push_back(settingsDoc["savedPodcasts"][i]["URL"].GetString());
-	// 	Names.push_back(settingsDoc["savedPodcasts"][i]["Name"].GetString());
-	// }
-	// std::cout << "Loaded " << settingsDoc["savedPodcasts"].Size() << " saved podcast URLs" << std::endl;
 	return 0;
 }
 
@@ -416,162 +280,125 @@ void setupDirectory() {
 	}
 }
 
+std::string current_post_id = "";
+std::string domain = "https://mastodon.social";
+// std::string url = domain + "/api/v1/timelines/public?limit=1";
+// std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045395536353577";
+// std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045395361763936";
+// std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045708160490317";
+// std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045708571271726"; // THIS LEAVES EMOJIS BLANKS. TODO: GO LOOK 'EM UP!
+std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045708897701054"; // THIS HAS &QUOT; ENTITYS
+
+
+int fetchPost() {
+	std::cout << "Fetching " << url << std::endl;
+	std::string fileContents = "";
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	const char* urlc = url.c_str();
+
+
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, urlc);
+		curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
+		curl_easy_setopt(curl, CURLOPT_CAINFO, pCACertFilePath);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L); // cache the CA cert bundle in memory for a week
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStringAppend);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&fileContents);
+
+		/* Perform the request, res gets the return code */
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK) {
+			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+			std::cout << "HTTP" << res << std::endl;
+		}
+
+		/* always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	char* currentBuf;
+	rapidjson::Document currentDoc;
+	if(stringToBuffer(fileContents, currentBuf) != 0) {
+		std::cout << "Failed to make buffer on line " << __LINE__ << std::endl;
+		return -1;
+	}
+	retCode = jsonParse(currentBuf, currentDoc);
+	if (retCode != 0) {
+		std::cout << "Received corrupted JSON: " << retCode << std::endl;
+		return -1;
+	}
+
+	Timeline currentTimeline = Timeline();
+	retCode = currentTimeline.Ingest(currentDoc);
+	if (retCode != 0) {
+		std::cout << "Bad ingest: " << retCode << std::endl;
+		return -1;
+	}
+
+	free(currentBuf);
+
+	if (currentUIstatus)
+		delete currentUIstatus;
+	currentUIstatus = new uiStatus {currentTimeline.statuses[0]};
+	current_post_id = currentTimeline.statuses[0].id;
+
+	drawUI();
+	std::cout << "UI Stack updated" << std::endl;
+	return 0;
+}
+
 int main() {
 	setupGraphics();
 	setupDirectory();
 	setupCurl();
-	setupSettings();
+	if(setupSettings() != 0) {
+		std::cout << "Failed to setup settings" << std::endl;
+		holdForExit();
+		return -1;
+	}
 	romfsInit();
 	load_efonts();
+
+	if (fetchPost() != 0) {
+		holdForExit();
+		return -1;
+	}
 	
 	// Main loop
-	while (aptMainLoop())
-	{
+	while (aptMainLoop()){
 		hidScanInput();
 		u32 kDown = hidKeysDown();
 		if (kDown & KEY_START || kDown & KEY_X)
 			break; // break in order to return to hbmenu
 		
-		// if (kDown & KEY_CPAD_DOWN || kDown & KEY_DDOWN)
-		// 	cursor = (cursor < menuLength-1) ? cursor+1 : cursor;
-		// if (kDown & KEY_CPAD_UP || kDown & KEY_DUP)
-		// 	cursor = (cursor > 0) ? cursor-1 : cursor;
 		if (kDown & KEY_B) {
-			// const int result = remove(pCACertFilePath);
-			// if( result == 0 ){
-			// 	printf("Successfully removed CACert\n");
-			// 	setupCACERT();
-			// } else {
-			// 	printf("%s\n", strerror( errno )); // No such file or directory
-			// }
 		}
 		if (kDown & KEY_Y) {
-			// std::string url = "https://gratejames.net/old/apiexample2";
-			std::string url = "https://mastodon.social/api/v1/timelines/public?limit=2";
-			std::cout << "Fetching " << url << std::endl;
-			std::string fileContents = "";
-			// CURLcode res = download(url, fileContents);
-			CURL *curl;
-			CURLcode res = CURLE_OK;
-			const char* urlc = url.c_str();
-
-
-			curl_global_init(CURL_GLOBAL_DEFAULT);
-
-			curl = curl_easy_init();
-			if(curl) {
-				curl_easy_setopt(curl, CURLOPT_URL, urlc);
-				curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
-				curl_easy_setopt(curl, CURLOPT_CAINFO, pCACertFilePath);
-				curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
-				curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L); // cache the CA cert bundle in memory for a week
-				// curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-				curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStringAppend);
-				curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&fileContents);
-
-				/* Perform the request, res gets the return code */
-				res = curl_easy_perform(curl);
-
-				/* Check for errors */
-				if(res != CURLE_OK) {
-					fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-					std::cout << "HTTP" << res << std::endl;
-				}
-
-				/* always cleanup */
-				curl_easy_cleanup(curl);
-			}
-			char* currentBuf;
-			rapidjson::Document currentDoc;
-			stringToBuffer(fileContents, currentBuf);
-			retCode = jsonParse(currentBuf, currentDoc);
-			if (retCode != 0) {
-				std::cout << "Received corrupted JSON: " << retCode << std::endl;
+			if (fetchPost() !=0) {
 				holdForExit();
 				return -1;
 			}
-			Timeline currentTimeline = Timeline();
-			retCode = currentTimeline.Ingest(currentDoc);
-			if (retCode != 0) {
-				std::cout << "Bad ingest: " << retCode << std::endl;
-				holdForExit();
-				return -1;
-			}
-			free(currentBuf);
-			// std::cout << "Post [0]:" << std::endl;
-			// std::cout << currentTimeline.statuses[0].account.display_name << std::endl;
-			// std::cout << currentTimeline.statuses[0].account.acct << std::endl;
-			// std::cout << currentTimeline.statuses[0].content << std::endl;
-			for (Status st : currentTimeline.statuses) {
-				uiStatus newStatus = {st};
-				uiStatuses.push_back(newStatus);
-			}
-
-			drawUI();
-			std::cout << "UI Stack updated" << std::endl;
 		}
-		// if (kDown & KEY_L) {
-		// 	std::cout << "Removing settings.json...";
-		// 	const char* filePath = "/3ds/JCatch/settings.json";
-		// 	retCode = std::remove(filePath);
-		// 	if (retCode != 0) {
-		// 		std::cout << "Err" << retCode << std::endl;
-		// 		std::perror("Error deleting");
-		// 		if (!std::ifstream{filePath}) {
-		// 			std::cout << "And I can't read it either" << std::endl;
-		// 		} else {
-		// 			std::cout << "But I can read it just fine lol" << std::endl;
-		// 		}
-		// 	} else {
-		// 		std::cout << "Done!" << std::endl;
-		// 		break;
-		// 	}
-		// }
-		// if (kDown & KEY_A) {
-			// std::cout << "m:" << currentMenu << ",c:" << cursor << std::endl;
-			// if (currentMenu == InitialMenu) {
-			// 	if (cursor == 0) {
-			// 		std::string newName = "Darknet Diaries";
-			// 		std::string newURL = "https://feeds.megaphone.fm/darknetdiaries";
-
-			// 		Document::AllocatorType& alloc = settingsDoc.GetAllocator();
-			// 		Names.push_back(newName);
-			// 		URLs.push_back(newURL);
-			// 		settingsDoc["savedPodcasts"].PushBack(Value().SetObject()
-			// 			.AddMember("Name", Value(newName.c_str(), alloc).Move(), alloc)
-			// 			.AddMember("URL", Value(newURL.c_str(), alloc).Move(), alloc)
-			// 		, alloc);
-			// 		writeSettings();
-
-			// 		std::cout << "Here's where I need to figure out the swkb lib lol." << std::endl;
-			// 	} else if (cursor == 1) {
-			// 		currentMenu = ViewSavedPodcasts;
-			// 		updateMenu();
-			// 	} else if (cursor == 2) {
-			// 		currentMenu = ViewCredits;
-			// 		updateMenu();
-			// 	}
-			// } else if (currentMenu == ViewSavedPodcasts) {
-			// 	selectedPodcast = cursor;
-			// 	// std::cout << "Selected Podcast: " << Names[selectedPodcast] << std::endl;
-			// 	currentMenu = PodcastOptions;
-			// 	updateMenu();
-			// } else if (currentMenu == PodcastOptions) {
-			// 	if (cursor == 0) {
-			// 		currentMenu = ListEpisodes;
-			// 		retCode = fetchPodcasts();
-			// 		if (retCode != 0) {
-			// 			currentMenu = PodcastOptions;
-			// 		}
-			// 		updateMenu();
-			// 	}
-			// } else if (currentMenu == ListEpisodes) {
-			// 	selectedEpisode = cursor;
-			// 	downloadEpisode();
-			// }
-		// }
-
-		// drawUI();
+		if (kDown & KEY_DRIGHT) {
+			url = domain + "/api/v1/timelines/public?limit=1&max_id=" + current_post_id;
+			if (fetchPost() !=0) {
+				holdForExit();
+				return -1;
+			}
+		}
+		if (kDown & KEY_DLEFT) {
+			url = domain + "/api/v1/timelines/public?limit=1&min_id=" + current_post_id;
+			if (fetchPost() !=0) {
+				holdForExit();
+				return -1;
+			}
+		}
 	}
 
 	// Exit services

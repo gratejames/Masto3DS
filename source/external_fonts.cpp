@@ -18,54 +18,87 @@ vector<fontDataItem> fontData = {
     },
     {
         "latin_1_supplement",
-        0x080,
-        // 0x0FF,
-        0x0DF,
+        0x0A0,
+        0x0FF,
         0,
-        // new C2D_Image[0x0FF - 0x080],
-        new C2D_Image[0x0DF - 0x080],
+        new C2D_Image[0x0FF - 0x0A0],
+    },
+    {
+        "cyrillic",
+        0x400,
+        0x4FF,
+        0,
+        new C2D_Image[0x4FF - 0x400],
+    },
+    {
+        "arabic",
+        0x600,
+        0x6FF,
+        0,
+        new C2D_Image[0x6FF - 0x600],
+    },
+    {
+        "builtin", // General Punctuation
+        0x2000,
+        0x206F,
+        0,
+        0,
     },
     // {
-    //     "ipa_extensions",
-    //     0x0250,
-    //     0x02AF,
+    //     "general_punctuation",
+    //     0x2000,
+    //     0x206F,
     //     0,
-    //     new C2D_Image[0x02AF - 0x0250],
+    //     new C2D_Image[0x206F - 0x2000],
     // },
+    {
+        "miscellaneous_symbols",
+        0x2600,
+        0x26FF,
+        0,
+        new C2D_Image[0x26FF - 0x2600],
+    },
+    {
+        "builtin", // CJK Symbols and Punctuation
+        0x3000,
+        0x303F,
+        0,
+        0,
+    },
+    {
+        "builtin", // Hiragana
+        0x3040,
+        0x309F,
+        0,
+        0,
+    },
+    {
+        "builtin", // Katakana
+        0x30A0,
+        0x30FF,
+        0,
+        0,
+    },
+    {
+        "builtin", // CJK Unified Ideographs
+        0x4e00,
+        0x9FFF,
+        0,
+        0,
+    },
+    {
+        "builtin",
+        0xFF00,
+        0xFFEF,
+        0,
+        0,
+    },
     // {
-    //     "spacing_modifier_letters",
-    //     0x02B0,
-    //     0x02FF,
+    //     "halfwidth_and_fullwidth_forms",
+    //     0xFF00,
+    //     0xFFEF,
     //     0,
-    //     new C2D_Image[0x02FF - 0x02B0],
-    // },
-    // {
-    //     "combining_diacritical_marks",
-    //     0x0300,
-    //     0x036F,
-    //     0,
-    //     new C2D_Image[0x036F - 0x0300],
-    // },
-    // {
-    //     "greek_and_coptic",
-    //     0x0370,
-    //     0x03FF,
-    //     0,
-    //     new C2D_Image[0x03FF - 0x0370],
-    // },
-    // {
-    //     "cyrillic",
-    //     0x0400,
-    //     0x04FF,
-    //     0,
-    //     new C2D_Image[0x04FF - 0x0400],
-    // },
-    // {
-    //     "cjk_symbol_and_punctuation",
-    //     0x3000,
-    //     0x303F,
-    //     0,
-    //     new C2D_Image[0x303F - 0x3000],
+    //     new C2D_Image[0xFFEF - 0xFF00],
     // },
     {
         "emoticons",
@@ -73,6 +106,13 @@ vector<fontDataItem> fontData = {
         0x1F64F,
         0,
         new C2D_Image[0x1F64F - 0x1F600],
+    },
+    {
+        "miscellaneous_symbols_and_pictographs",
+        0x1F300,
+        0x1F5FF,
+        0,
+        new C2D_Image[0x1F5FF - 0x1F300],
     },
 };
 
@@ -98,6 +138,8 @@ u32 utf8_to_codepoint(string utf8) {
 void load_efonts() {
     for (uint i = 0; i < fontData.size(); i++) {
         fontDataItem font = fontData[i];
+        if (font.name == "builtin")
+            continue;
         string fileName = "romfs:/fonts/" + font.name + "_font.t3x";
         C2D_SpriteSheet fontSheet = C2D_SpriteSheetLoad(fileName.c_str());
         if (fontSheet == NULL) {
@@ -106,7 +148,7 @@ void load_efonts() {
         }
         uint num_of_images = C2D_SpriteSheetCount(fontSheet);
         uint len = font.end - font.start;
-        if (num_of_images-1 != len) {
+        if (num_of_images-1 != len && num_of_images != len) {
             std::cout << "Error loading font (" << font.name << "): expected " << len << " glyphs but saw " << num_of_images-1 << std::endl;
             continue;
         }
@@ -133,57 +175,48 @@ void draw_texture(C2D_Image image, float x, float y, float x_size, float y_size,
 void getSize_efont(string text, float scale, float &t_width, float &t_height) {
     u32 codepoint = utf8_to_codepoint(text);
     int ef = efonts_font(text);
-    if (ef == -1) {
-            C2D_TextBuf textBuf = C2D_TextBufNew(5);
-            C2D_Text c2text;
-            C2D_TextParse(&c2text, textBuf, text.c_str());
-            C2D_TextOptimize(&c2text);
-            C2D_TextGetDimensions(&c2text, scale*0.5, scale*0.5, &t_width, &t_height);
-        //     C2D_DrawText(&c2text, C2D_WithColor, origin_x + width, origin_y+2, 0, scale*0.5, scale*0.5, color);
-        //     width += t_width;
-        //     height = std::max(t_height, height);
-            C2D_TextBufDelete(textBuf);
+    if (ef == -2) {
+        C2D_TextBuf textBuf = C2D_TextBufNew(5);
+        C2D_Text c2text;
+        C2D_TextParse(&c2text, textBuf, text.c_str());
+        C2D_TextOptimize(&c2text);
+        C2D_TextGetDimensions(&c2text, scale*0.5, scale*0.5, &t_width, &t_height);
+        C2D_TextBufDelete(textBuf);
         return;
+    } else if (ef == -1) {
+        t_width = 0;
+        t_height = 0;
+    } else {
+        fontDataItem font = fontData[ef];
+        C2D_Image img = font.glyphs[codepoint - font.start];
+        if (img.tex == 0 || img.subtex == 0)
+            return;
+        t_width = img.subtex->width * scale;
+        t_height = img.subtex->height * scale;
     }
-    fontDataItem font = fontData[ef];
-    C2D_Image img = font.glyphs[codepoint - font.start];
-    t_width = img.subtex->width * scale;
-    t_height = img.subtex->height * scale;
 }
 
 void draw_efont(string text, float x, float y, float scale, u32 color) {
     u32 codepoint = utf8_to_codepoint(text);
     int ef = efonts_font(text);
-    if (ef == -1) {
-            C2D_TextBuf textBuf = C2D_TextBufNew(5);
-            C2D_Text c2text;
-            C2D_TextParse(&c2text, textBuf, text.c_str());
-            C2D_TextOptimize(&c2text);
-            // C2D_TextGetDimensions(&c2text, scale*0.5, scale*0.5, &t_width, &t_height);
-            C2D_DrawText(&c2text, C2D_WithColor, x, y+2, 0, scale*0.5, scale*0.5, color);
-            // width += t_width;
-            // height = std::max(t_height, height);
-            C2D_TextBufDelete(textBuf);
-
-
-        // int ef = efonts_font(utf8Char);
-        // if (ef != -1) {
-            // getSize_efont(utf8Char, scale, t_width, t_height);
-            // draw_efont(utf8Char, origin_x + width, origin_y, scale, color);
-            // width += t_width;
-            // height = std::max(t_height, height);
-        // } else {
-        // }
-        return;
+    if (ef == -2) {
+        C2D_TextBuf textBuf = C2D_TextBufNew(5);
+        C2D_Text c2text;
+        C2D_TextParse(&c2text, textBuf, text.c_str());
+        C2D_TextOptimize(&c2text);
+        C2D_DrawText(&c2text, C2D_WithColor, x, y+2, 0, scale*0.5, scale*0.5, color);
+        C2D_TextBufDelete(textBuf);
+    } else if (ef == -1) {
+        std::cout << "BadUnicode unkcp: " << codepoint << std::endl;
+    } else {
+        fontDataItem font = fontData[ef];
+        C2D_Image img = font.glyphs[codepoint - font.start];
+        if (img.tex == 0 || img.subtex == 0)
+            return;
+        float t_width = img.subtex->width * scale;
+        float t_height = img.subtex->height * scale;
+        draw_texture(img, x, y, t_width, t_height, color);
     }
-    fontDataItem font = fontData[ef];
-
-    C2D_Image img = font.glyphs[codepoint - font.start];
-
-    float t_width = img.subtex->width * scale;
-    float t_height = img.subtex->height * scale;
-
-	draw_texture(img, x, y, t_width, t_height, color);
 }
 
 // Returns which font the character is in. -1 for default system handler or not found.
@@ -197,10 +230,13 @@ int efonts_font(string text) {
     for (uint i = 0; i < fontData.size(); i++) {
         fontDataItem font = fontData[i];
         if (font.start <= codepoint && codepoint < font.end) {
+            if (font.name == "builtin")
+                return -2;
+            C2D_Image img = font.glyphs[codepoint - font.start];
+            if (img.tex == 0 || img.subtex == 0)
+                return -2;
             return i;
         }
     }
-    // std::cout << "BadUnicode unkcp: " << codepoint << ", " << text.length() << (int)text[0] << std::endl;
-    // std::cout << "BadUnicode unkcp: " << codepoint << std::endl;
     return -1;
 }

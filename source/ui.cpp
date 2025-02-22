@@ -106,24 +106,24 @@ void text::Draw(float origin_x, float origin_y, float &width, float &height, con
 
                 uint imgWidth;
                 C2D_Image image = EmojiFromDownload(chunk, imgWidth);
-                float imageScale = 12.0/imgWidth;
+                float imageScale = 24.0/imgWidth;
 
                 // std::cout << "image: ptr " << &image << " s:" << image.tex->width << "," << image.tex->height << std::endl;
                 // std::cout << "image: pos " << origin_x + width << "," << origin_y << " ds:" << imageScale << std::endl;
 
-                C2D_DrawImageAt(image, origin_x + width, origin_y+4, 0, NULL, imageScale*scale, imageScale*scale);
+                C2D_DrawImageAt(image, origin_x + width, origin_y-4, 0, NULL, imageScale*scale, imageScale*scale);
 
                 linearFree(image.tex);
                 free((void *)image.subtex);
 
                 i += emojiNames[0].second.length() + 1;
                 // width += 10;
-                width += 12*scale;
+                width += 24*scale;
+                continue;
                 // std::cout << "Emoji: width: " << width << std::endl;
             } else {
                 std::cout << "Emojis found n>1? n=" << emojiNames.size() << std::endl;
             }
-            continue;
         }
 
 
@@ -174,7 +174,9 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
     bool style_invis = false;
     std::cout << "BadHTML size " << dispText.length() << std::endl;
     while (i < dispText.length()) {
+
         string utf8Char = getUTF8Char(dispText, i);
+
         i += utf8Char.length();
 
         if (readingTag) {
@@ -297,7 +299,101 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
         if (style_invis)
             continue;
 
+        if (utf8Char == ":") {
+            // TODO: Ensure that there's actually a closing colon
+            // std::cout << "Begin Emoji!" << std::endl;
+            // Begin emoji!!
+            string emojiLookAhead = "";
+            vector<pair<int, string>> emojiNames = {};
+            int longestEmojiCode = 0;
+            for (uint iEmoji = 0; iEmoji < emojis.size(); iEmoji++) {
+                // std::cout << iEmoji << " emoji: " << emojis[iEmoji].shortcode << std::endl;
+                emojiNames.push_back({iEmoji, emojis[iEmoji].shortcode});
+                longestEmojiCode = std::max(longestEmojiCode, (int)emojis[iEmoji].shortcode.length());
+            }
+            // std::cout << "Listed!" << std::endl;
+            // Emoji's are in a list. Reduce it somehow?
+            int lookAheadIndex = 1;
+            // Loop while we either have multiple emoji options and the lookahead index is less than the longest emoji
+            while (emojiNames.size() > 1 && lookAheadIndex < longestEmojiCode) {
+                string newChar = getUTF8Char(dispText, i + lookAheadIndex);
+                if (newChar ==  ":") {
+                    break;
+                }
+                emojiLookAhead.append(newChar);
+                for (uint emojiNameIndex = 0; emojiNameIndex < emojiNames.size(); ) {
+                    string shortcode = emojiNames[emojiNameIndex].second;
+                    // Check if each emoji shortcode begins with whatever
+                    // partial we are constructing
+                    // Start searching at the beginning (working towards the left) and only accept the beginning.
+                    if (!(shortcode.rfind(emojiLookAhead, 0) == 0)) {
+                        // No match!
+                        std::cout << shortcode << " not matches LA " << emojiLookAhead << std::endl;
+                        // We advance to the next by removing the current one and letting a new one replace it
+                        emojiNames.erase(emojiNames.begin() + emojiNameIndex);
+                    } else {
+                        std::cout << shortcode << " matches LA " << emojiLookAhead << std::endl;
+                        // We advance by incrememnting
+                        emojiNameIndex++;
+                    }
+                }
+                lookAheadIndex++;
+                break;
+            }
+            // std::cout << "Culled!" << std::endl;
+            // We now have emojiNames with either 0 or 1 items, hopefully
+            if (emojiNames.size() == 0) {
+                std::cout << "No emoji found for (LA) shortcode " << emojiLookAhead << std::endl;
+            } else if (emojiNames.size() == 1) {
+                // Show that the shortcode left in the list matches
+                // the shortcode that we can pull from the original emojis list
+                // std::cout << "Found: " << emojiNames[0].second << "=" << emojis[emojiNames[0].first].shortcode << std::endl;
+                if (dispText.length() < i + emojiNames[0].second.length()) {
+                    // std::cout << "Out of room" << std::endl;
+                    continue;
+                }
+                string possibleEmoji = dispText.substr(i, emojiNames[0].second.length());
+                if (possibleEmoji != emojiNames[0].second) {
+                    // std::cout << "Mismatch" << std::endl;
+                    continue;
+                }
+                // std::cout << "Found: " << emojiNames[0].second << std::endl;
+                string url = emojis[emojiNames[0].first].static_url;
+
+                // std::cout << "Fetching emoji " << url << std::endl;
+                struct downloaded chunk = {0};
+                int retCode = download(url, chunk);
+                if (retCode != 0) {
+                    std::cout << "Download failed" << std::endl;
+                    continue;
+                }
+
+                // std::cout << "emoji size " << chunk.size << std::endl;
+
+                uint imgWidth;
+                C2D_Image image = EmojiFromDownload(chunk, imgWidth);
+                float imageScale = 24.0/imgWidth;
+
+                // std::cout << "image: ptr " << &image << " s:" << image.tex->width << "," << image.tex->height << std::endl;
+                // std::cout << "image: pos " << origin_x + width << "," << origin_y << " ds:" << imageScale << std::endl;
+
+                C2D_DrawImageAt(image, origin_x + width, origin_y-4, 0, NULL, imageScale*scale, imageScale*scale);
+
+                linearFree(image.tex);
+                free((void *)image.subtex);
+
+                i += emojiNames[0].second.length() + 1;
+                // width += 10;
+                width += 24*scale;
+                // std::cout << "Emoji: width: " << width << std::endl;
+                continue;
+            } else {
+                std::cout << "Emojis found n>1? n=" << emojiNames.size() << std::endl;
+            }
+        }
+
         getSize_efont(utf8Char, scale, t_width, t_height);
+        
         // TODO: Some sort of word wrapping? Pehaps scan ahead to the next space when we hit a space, then check if the word can fit in?
         if (currentLineWidth + t_width > maxWidth) {
             height += lineHeight;
@@ -333,9 +429,18 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
 }
 
 uiStatus::uiStatus(Status &status) : internalStatus(status) {
-    display_name = text(internalStatus.account.display_name, color_text, 1, internalStatus.account.emojis);
+    string name = internalStatus.account.display_name;
+    if (name.length() == 0)
+        name = internalStatus.account.username;
+    display_name = text(name, color_text, 1, internalStatus.account.emojis);
     acct = text(internalStatus.account.acct, color_text, 0.8, internalStatus.account.emojis);
-    content = htmltext(internalStatus.content, 0.8, status.emojis);
+    string strcontent = internalStatus.content;
+    uint x = strcontent.find("&quot;");
+    while (std::string::npos != x) {
+        strcontent.replace(x, 6, "\"");
+        x = strcontent.find("&quot;");
+    }
+    content = htmltext(strcontent, 0.8, status.emojis);
 }
 
 void uiStatus::Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth) {

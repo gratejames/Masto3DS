@@ -9,3 +9,7 @@ C:\devkitPro\tools\bin\tex3ds -o {output}.t3x -f a4 -z auto --atlas -p preview.p
 
 Don't forget to update font_name.txt in romfs/gfx/msg, #define DEF_EXFONT_NUM_OF_FONT_NAME, #define DEF_EXFONT_NUM_OF_*_BYTES_FONT, util_exfont_font_characters,
 samples_*_bytes in exfont.c/exfont.h and font load/unload button in setting_menu.c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+This has worked vey well, except for some reason the emojis I'm generating are displayed around 50% larger than the originals. The only difference between my process and the one outline in `How_to_add_fonts` is that I'm using ImageMagick to downscale the image from 100x100 to 25x25, but I'm using an identical tex3ds command: `tex3ds -o "Emoticons/emoticons_font.t3x" -f a4 -z auto --atlas -p "Emoticons"/preview.png "Emoticons"/25/*`
