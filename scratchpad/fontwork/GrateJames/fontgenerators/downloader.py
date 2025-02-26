@@ -5,7 +5,7 @@ import os
 url = "https://emoji.fileformat.info/png/1f600.png"
 
 
-fontset = "Emoticons"
+fontset = "Greek And Coptic"
 # fontset = "Enclosed Alphanumeric Supplement"
 
 if fontset == "Emoticons":
@@ -14,6 +14,12 @@ if fontset == "Emoticons":
 elif fontset == "Enclosed Alphanumeric Supplement":
 	start = 0x1F100
 	end = 0x1F1FF
+elif fontset == "General Punctuation":
+	start = 0x2000
+	end = 0x206F
+elif fontset == "Greek And Coptic":
+	start = 0x370
+	end = 0x3FF
 
 http_session = requests.session()
 headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"}

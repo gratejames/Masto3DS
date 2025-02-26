@@ -233,6 +233,8 @@ private:
 
 class Status {
 public:
+    Status() : reblog(nullptr) {};
+    ~Status() {if (reblog != nullptr) delete reblog;};
     int Ingest(rapidjson::Value &object);
     string id;
     string uri;

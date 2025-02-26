@@ -152,6 +152,8 @@ htmltext::htmltext(string dispText, float scale, vector<CustomEmoji> emojis) {
 }
 
 void htmltext::Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth) {
+    std::cout << "HTML Draw" << std::endl;
+    // u64 end = svcGetSystemTick() + 500000000; while (svcGetSystemTick() < end) {}
     const float lineHeight = scale * defaultFontHeight;
     float t_width = 0, t_height = 0;
     float currentLineWidth = 0;;
@@ -299,6 +301,9 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
         if (style_invis)
             continue;
 
+        // std::cout << "HTML parsed " << i << " : " <<  utf8Char << std::endl;
+        // u64 end = svcGetSystemTick() + 20000000; while (svcGetSystemTick() < end) {}
+
         if (utf8Char == ":") {
             // TODO: Ensure that there's actually a closing colon
             // std::cout << "Begin Emoji!" << std::endl;
@@ -392,7 +397,13 @@ void htmltext::Draw(float origin_x, float origin_y, float &width, float &height,
             }
         }
 
+        // std::cout << "HTML emoji'd " << i << " : " <<  utf8Char << std::endl;
+        // end = svcGetSystemTick() + 20000000; while (svcGetSystemTick() < end) {}
+
         getSize_efont(utf8Char, scale, t_width, t_height);
+
+        // std::cout << "HTML size'd " << i << " : " <<  utf8Char << std::endl;
+        // end = svcGetSystemTick() + 20000000; while (svcGetSystemTick() < end) {}
         
         // TODO: Some sort of word wrapping? Pehaps scan ahead to the next space when we hit a space, then check if the word can fit in?
         if (currentLineWidth + t_width > maxWidth) {
@@ -435,6 +446,12 @@ uiStatus::uiStatus(Status &status) : internalStatus(status) {
     display_name = text(name, color_text, 1, internalStatus.account.emojis);
     acct = text(internalStatus.account.acct, color_text, 0.8, internalStatus.account.emojis);
     string strcontent = internalStatus.content;
+
+    if (strcontent.length() == 0 && internalStatus.reblog != nullptr) {
+        strcontent = internalStatus.reblog->content;
+        std::cout << "reblog" << std::endl;
+    }
+
     uint x = strcontent.find("&quot;");
     while (std::string::npos != x) {
         strcontent.replace(x, 6, "\"");

@@ -151,6 +151,7 @@ int CustomEmoji::Ingest(rapidjson::Value &object) {
     return 0;
 }
 
+
 int Status::Ingest(rapidjson::Value &object) {
     if (!IngestCheckType("Status", object, Ingest::Object)) {return -1;}
     bool valid = true;
@@ -219,7 +220,10 @@ int Status::Ingest(rapidjson::Value &object) {
     // url
     // in_reply_to_id
     // in_reply_to_account_id
-    // reblog
+    if (object.HasMember("reblog") && object["reblog"].IsObject()) {
+        reblog = new Status();
+        reblog->Ingest(object["reblog"]);
+    }
     // poll
     // card
     // language

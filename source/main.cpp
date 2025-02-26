@@ -281,13 +281,18 @@ void setupDirectory() {
 }
 
 std::string current_post_id = "";
-std::string domain = "https://mastodon.social";
-// std::string url = domain + "/api/v1/timelines/public?limit=1";
+// std::string domain = "https://mastodon.social";
+std::string domain = "https://floofy.tech";
 // std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045395536353577";
 // std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045395361763936";
 // std::string url = domain + "/api/v1/timelines/public?limit=1&max_id=114045708160490317";
 // std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045708571271726"; // THIS LEAVES EMOJIS BLANKS. TODO: GO LOOK 'EM UP!
-std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045708897701054"; // THIS HAS &QUOT; ENTITYS
+// std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045708897701054"; // THIS HAS &QUOT; ENTITYS - DONE
+// std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114045847999887872";
+// std::string url = domain + "/api/v1/timelines/public?limit=1&min_id=114049187521761857"; // Has VS16 - request display as emoiji, and is a reblog! // Missing
+
+std::string url = domain + "/api/v1/timelines/public?limit=1";
+// std::string url = "https://gratejames.net/old/apiexample2";
 
 
 int fetchPost() {
@@ -345,6 +350,11 @@ int fetchPost() {
 
 	if (currentUIstatus)
 		delete currentUIstatus;
+
+	if (currentTimeline.statuses.size() == 0) {
+		std::cout << "Zero Statuses Returned" << std::endl;
+		return -1;
+	}
 	currentUIstatus = new uiStatus {currentTimeline.statuses[0]};
 	current_post_id = currentTimeline.statuses[0].id;
 

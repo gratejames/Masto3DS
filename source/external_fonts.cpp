@@ -6,6 +6,7 @@ struct fontDataItem {
     u32 end;
     C2D_SpriteSheet fontSheet;
     C2D_Image *glyphs;
+    bool newScaling;
 };
 
 vector<fontDataItem> fontData = {
@@ -15,6 +16,7 @@ vector<fontDataItem> fontData = {
         0x07F,
         0,
         new C2D_Image[0x07F - 0x000],
+        false,
     },
     {
         "latin_1_supplement",
@@ -22,6 +24,15 @@ vector<fontDataItem> fontData = {
         0x0FF,
         0,
         new C2D_Image[0x0FF - 0x0A0],
+        false,
+    },
+    {
+        "greek_and_coptic",
+        0x370,
+        0x3FF,
+        0,
+        new C2D_Image[0x3FF - 0x370],
+        true,
     },
     {
         "cyrillic",
@@ -29,6 +40,7 @@ vector<fontDataItem> fontData = {
         0x4FF,
         0,
         new C2D_Image[0x4FF - 0x400],
+        false,
     },
     {
         "arabic",
@@ -36,27 +48,31 @@ vector<fontDataItem> fontData = {
         0x6FF,
         0,
         new C2D_Image[0x6FF - 0x600],
-    },
-    {
-        "builtin", // General Punctuation
-        0x2000,
-        0x206F,
-        0,
-        0,
+        false,
     },
     // {
-    //     "general_punctuation",
+    //     "builtin", // General Punctuation
     //     0x2000,
     //     0x206F,
     //     0,
-    //     new C2D_Image[0x206F - 0x2000],
+    //     0,
+    //     false,
     // },
+    {
+        "general_punctuation",
+        0x2000,
+        0x206F,
+        0,
+        new C2D_Image[0x206F - 0x2000],
+        true,
+    },
     {
         "miscellaneous_symbols",
         0x2600,
         0x26FF,
         0,
         new C2D_Image[0x26FF - 0x2600],
+        false,
     },
     {
         "builtin", // CJK Symbols and Punctuation
@@ -64,6 +80,7 @@ vector<fontDataItem> fontData = {
         0x303F,
         0,
         0,
+        false,
     },
     {
         "builtin", // Hiragana
@@ -71,6 +88,7 @@ vector<fontDataItem> fontData = {
         0x309F,
         0,
         0,
+        false,
     },
     {
         "builtin", // Katakana
@@ -78,6 +96,7 @@ vector<fontDataItem> fontData = {
         0x30FF,
         0,
         0,
+        false,
     },
     {
         "builtin", // CJK Unified Ideographs
@@ -85,6 +104,7 @@ vector<fontDataItem> fontData = {
         0x9FFF,
         0,
         0,
+        false,
     },
     {
         "builtin",
@@ -92,6 +112,7 @@ vector<fontDataItem> fontData = {
         0xFFEF,
         0,
         0,
+        false,
     },
     // {
     //     "halfwidth_and_fullwidth_forms",
@@ -101,11 +122,20 @@ vector<fontDataItem> fontData = {
     //     new C2D_Image[0xFFEF - 0xFF00],
     // },
     {
+        "enclosed_alphanumeric_supplement",
+        0x1F100,
+        0x1F1FF,
+        0,
+        new C2D_Image[0x1F1FF - 0x1F100],
+        true,
+    },
+    {
         "emoticons",
         0x1F600,
         0x1F64F,
         0,
         new C2D_Image[0x1F64F - 0x1F600],
+        true,
     },
     {
         "miscellaneous_symbols_and_pictographs",
@@ -113,6 +143,7 @@ vector<fontDataItem> fontData = {
         0x1F5FF,
         0,
         new C2D_Image[0x1F5FF - 0x1F300],
+        false,
     },
 };
 
@@ -191,6 +222,8 @@ void getSize_efont(string text, float scale, float &t_width, float &t_height) {
         C2D_Image img = font.glyphs[codepoint - font.start];
         if (img.tex == 0 || img.subtex == 0)
             return;
+        if (font.newScaling)
+            scale *= 0.8;
         t_width = img.subtex->width * scale;
         t_height = img.subtex->height * scale;
     }
@@ -213,6 +246,8 @@ void draw_efont(string text, float x, float y, float scale, u32 color) {
         C2D_Image img = font.glyphs[codepoint - font.start];
         if (img.tex == 0 || img.subtex == 0)
             return;
+        if (font.newScaling)
+            scale *= 0.8;
         float t_width = img.subtex->width * scale;
         float t_height = img.subtex->height * scale;
         draw_texture(img, x, y, t_width, t_height, color);
