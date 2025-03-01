@@ -26,36 +26,57 @@ const u32 color_textLink            = C2D_Color32(0xAA, 0xAA, 0xFF, 0xFF);
 const u32 color_horizontalRule      = C2D_Color32(0xAA, 0xAA, 0xAA, 0xFF);
 const u32 color_debug               = C2D_Color32(0xFF, 0x00, 0x00, 0xFF);
 
+class pfp {
+public:
+    pfp(): pfp("") {};
+    pfp(string url);
+    ~pfp();
+    // text(string dispText, u32 color, float scale, vector<CustomEmoji> emojis);
+    // string dispText;
+    // u32 color;
+    // float scale;
+    // vector<CustomEmoji> emojis;
+    void Draw(float origin_x, float origin_y);
+private:
+    C2D_Image image;
+    float imageScale;
+};
+
 class text {
 public:
     text(): text("", 0, 1, {}) {};
     text(string dispText, u32 color, float scale, vector<CustomEmoji> emojis);
+    void Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth);
+    float scale;
+private:
     string dispText;
     u32 color;
-    float scale;
     vector<CustomEmoji> emojis;
-    void Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth);
-private:
 };
 
 class htmltext {
 public:
     htmltext(): htmltext("", 1, {}) {};
     htmltext(string dispText, float scale, vector<CustomEmoji> emojis);
-    string dispText;
-    float scale;
-    vector<CustomEmoji> emojis;
     void Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth);
+    float scale;
 private:
+    string dispText;
+    vector<CustomEmoji> emojis;
 };
 
 class uiStatus {
 public:
     uiStatus(Status &status);
     void Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth);
+private:
     Status &internalStatus;
     text display_name;
     text acct;
+    pfp profile;
     htmltext content;
-private:
+    bool reblog;
+    text rb_name;
+    text rb_acct;
+    pfp rb_profile;
 };

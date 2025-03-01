@@ -80,27 +80,49 @@ int Timeline::Ingest(rapidjson::Document &doc) {
         return -1;
     }
     for (rapidjson::Value &v : doc.GetArray()) {
-        Status newStatus = {};
-        int retCode = newStatus.Ingest(v);
+        statuses.emplace_back();
+        int retCode = statuses.back().Ingest(v);
         if (retCode != 0)
             return retCode;
-        statuses.push_back(newStatus);
+        //.Ingest(v);
+        // Status newStatus = {};
+        // int retCode = newStatus.Ingest(v);
+        // if (retCode != 0)
+        //     return retCode;
+        // statuses.push_back(newStatus);
     }
     return 0;
 }
 
 int Account::Ingest(rapidjson::Value &object) {
-    if (!object.IsObject()) {
-        std::cout << "Account Ingest Error 1: Account (Object) is of type " << kTypeNames[object.GetType()] << std::endl;
+    if (!IngestCheckType("Account", object, Ingest::Object)) {return -1;}
+    // if (!object.IsObject()) {
+    //     std::cout << "Account Ingest Error 1: Account (Object) is of type " << kTypeNames[object.GetType()] << std::endl;
+    //     return -1;
+    // }
+    bool valid = true;
+    valid = valid && IngestCheck("Account", object, "id",                   Ingest::String);
+    valid = valid && IngestCheck("Account", object, "username",             Ingest::String);
+    valid = valid && IngestCheck("Account", object, "acct",                 Ingest::String);
+    valid = valid && IngestCheck("Account", object, "url",                  Ingest::String);
+    valid = valid && IngestCheck("Account", object, "display_name",         Ingest::String);
+    valid = valid && IngestCheck("Account", object, "avatar",               Ingest::String);
+    valid = valid && IngestCheck("Account", object, "avatar_static",        Ingest::String);
+    valid = valid && IngestCheck("Account", object, "emojis",               Ingest::Array);
+
+
+    if (!valid) {
+        std::cout << "Invalid ingest" << std::endl;
         return -1;
     }
+
     id = object["id"].GetString();
     username = object["username"].GetString();
     acct = object["acct"].GetString();
     url = object["url"].GetString();
     display_name = object["display_name"].GetString();
     // note
-    // avatar = object["avatar"].GetString();
+    avatar = object["avatar"].GetString();
     avatar_static = object["avatar_static"].GetString();
     // header
     // header_static

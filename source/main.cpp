@@ -45,38 +45,7 @@ uiStatus * currentUIstatus;
 
 std::string defaultJSON = "{}";
 
-// C2D_Text title;
-// C2D_TextBuf titleBuf  = C2D_TextBufNew(100);
-// C2D_Text menu;
-// C2D_TextBuf menuBuf = C2D_TextBufNew(4096);
-
 int retCode = 0;
-
-
-// char* menuString;
-
-// std::string titleText = "JCatcher";
-
-// std::string initialMenuText = \
-// 		"Add new podcast URL\n"\
-// 		"View Saved Podcasts\n"\
-// 		"Credits";
-
-// std::string podcastOptionsText = \
-// 		"Check Episodes\n"\
-// 		"Edit\n"\
-// 		"Remove";
-
-// std::string creditsText = \
-// 		"Application: James Smythe\n"\
-// 		"Thanks to: TinyXML2, RapidJSON";
-
-// std::vector<std::string> Names;
-// std::vector<std::string> URLs;
-// std::vector<std::string> EpisodeNames;
-// std::vector<std::string> EpisodeURLs;
-
-
 
 void printParseError(ParseErrorCode parseError) {
 	switch (parseError) {
@@ -298,35 +267,14 @@ std::string url = domain + "/api/v1/timelines/public?limit=1";
 int fetchPost() {
 	std::cout << "Fetching " << url << std::endl;
 	std::string fileContents = "";
-	CURL *curl;
-	CURLcode res = CURLE_OK;
-	const char* urlc = url.c_str();
 
+	CURLcode res = download(url, fileContents);
 
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-
-	curl = curl_easy_init();
-	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, urlc);
-		curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
-		curl_easy_setopt(curl, CURLOPT_CAINFO, pCACertFilePath);
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
-		curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L); // cache the CA cert bundle in memory for a week
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStringAppend);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&fileContents);
-
-		/* Perform the request, res gets the return code */
-		res = curl_easy_perform(curl);
-
-		/* Check for errors */
-		if(res != CURLE_OK) {
-			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-			std::cout << "HTTP" << res << std::endl;
-		}
-
-		/* always cleanup */
-		curl_easy_cleanup(curl);
+	if(res != CURLE_OK) {
+		std::cout << "Failed to download" << std::endl;
+		return -1;
 	}
+
 	char* currentBuf;
 	rapidjson::Document currentDoc;
 	if(stringToBuffer(fileContents, currentBuf) != 0) {

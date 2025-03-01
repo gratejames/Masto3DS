@@ -47,9 +47,9 @@
             "command": "/opt/devkitpro/tools/bin/3dslink",
             "args": [
                 "-a",
-                "10.60.114.91",
-                // "192.168.1.34",
+                "10.60.188.143",
                 "${workspaceFolderBasename}.3dsx"
+                // gdb-multiarch ${workspaceFolderBasename}.elf -ex 'target remote 10.60.188.143:4000'
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

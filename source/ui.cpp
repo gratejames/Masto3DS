@@ -445,11 +445,19 @@ uiStatus::uiStatus(Status &status) : internalStatus(status) {
         name = internalStatus.account.username;
     display_name = text(name, color_text, 1, internalStatus.account.emojis);
     acct = text(internalStatus.account.acct, color_text, 0.8, internalStatus.account.emojis);
+    profile = pfp(internalStatus.account.avatar_static);
     string strcontent = internalStatus.content;
 
     if (strcontent.length() == 0 && internalStatus.reblog != nullptr) {
-        strcontent = internalStatus.reblog->content;
         std::cout << "reblog" << std::endl;
+        strcontent = internalStatus.reblog->content;
+        reblog = true;
+        string name = internalStatus.reblog->account.display_name;
+        if (name.length() == 0)
+            name = internalStatus.reblog->account.username;
+        rb_name = text(name, color_text, 1, internalStatus.reblog->account.emojis);
+        rb_acct = text(internalStatus.reblog->account.acct, color_text, 0.8, internalStatus.reblog->account.emojis);
+        rb_profile = pfp(internalStatus.reblog->account.avatar_static);
     }
 
     uint x = strcontent.find("&quot;");
@@ -460,6 +468,46 @@ uiStatus::uiStatus(Status &status) : internalStatus(status) {
     content = htmltext(strcontent, 0.8, status.emojis);
 }
 
+pfp::pfp(string url) {
+    image.tex = nullptr;
+    image.subtex = nullptr;
+    std::cout << "pfp i" << std::endl;
+    if (url == "")
+        return;
+    // std::cout << "pfp at " << url << std::endl;
+    struct downloaded chunk = {0};
+    int retCode = download(url, chunk);
+    if (retCode != 0) {
+        std::cout << "pfp download failed" << std::endl;
+        return;
+    }
+
+    uint imgWidth;
+    image = EmojiFromDownload(chunk, imgWidth);
+    imageScale = 48.0/imgWidth;
+}
+
+pfp::~pfp() {
+    std::cout << "pfp f" << std::endl;
+    if (image.tex != nullptr) {
+        linearFree(image.tex);
+        image.tex = nullptr;
+    }
+    if (image.subtex != nullptr) {
+        free((void *)image.subtex);
+        image.subtex = nullptr;
+    }
+}
+
+void pfp::Draw(float origin_x, float origin_y) {
+    if (image.tex != nullptr) {
+        std::cout << "Drawing pfp " << image.tex->width << "x" << image.tex->height << " " << image.subtex->width << "x" << image.subtex->height << std::endl;
+        C2D_DrawImageAt(image, origin_x, origin_y, 0, NULL, imageScale, imageScale);
+    } else {
+        std::cout << "Skipped pfp nulltex" << std::endl;
+    }
+}
+
 void uiStatus::Draw(float origin_x, float origin_y, float &width, float &height, const float maxWidth) {
     float t_width, t_height;
 
@@ -467,10 +515,12 @@ void uiStatus::Draw(float origin_x, float origin_y, float &width, float &height,
     origin_y += uiPad;
     origin_x += uiPad;
 
-    // Draw display_name
-    display_name.Draw(origin_x, origin_y, t_width, t_height, maxWidth);
+    profile.Draw(origin_x, origin_y);
 
-    float acct_x = origin_x + t_width + uiPad;
+    // Draw display_name
+    display_name.Draw(origin_x+32, origin_y, t_width, t_height, maxWidth);
+
+    float acct_x = origin_x+32 + t_width + uiPad;
     float name_height = t_height;
 
     // Since the acct is slightly smaller than the display name
@@ -487,6 +537,13 @@ void uiStatus::Draw(float origin_x, float origin_y, float &width, float &height,
     // Pick max of display_name height and acct height
     name_height = std::max(name_height, t_height);
 
+    if (reblog) {
+        rb_name.Draw(origin_x+64, origin_y + name_height + uiPad, t_width, t_height, maxWidth);
+        float acct_x = origin_x+64 + t_width + uiPad;
+        float acct_y = origin_y + (name_height - acct.scale*defaultFontHeight) + name_height + uiPad;
+        rb_acct.Draw(acct_x, acct_y, t_width, t_height, maxWidth);
+        origin_y += name_height + uiPad;
+    }
     // Draw content
     content.Draw(origin_x, origin_y + name_height + uiPad, t_width, t_height, maxWidth);
 
